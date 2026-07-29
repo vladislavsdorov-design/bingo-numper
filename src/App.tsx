@@ -1393,7 +1393,7 @@ export default function BingoCaller() {
           overflow: hidden;
         }
         .display-back {
-       position: absolute;
+        position: absolute;
           top: 14px;
           left: 14px;
           opacity: -10.50;
@@ -1948,7 +1948,7 @@ export default function BingoCaller() {
                     animationDuration: `${p.duration}s`,
                     animationDelay: `${p.delay}s`,
                     transform: `rotate(${p.rotate}deg)`,
-                    "--sway": `${p.sway}px`,
+                    "--sway": `${p.sway}px` as any,
                   }}
                 />
               ))}

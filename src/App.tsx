@@ -933,6 +933,7 @@
 //     </div>
 //   );
 // }
+/** @jsxRuntime classic */
 import React, { useState, useEffect, useRef } from "react";
 import {
   RotateCcw,
@@ -1948,7 +1949,6 @@ export default function BingoCaller() {
                     animationDuration: `${p.duration}s`,
                     animationDelay: `${p.delay}s`,
                     transform: `rotate(${p.rotate}deg)`,
-                    "--sway": `${p.sway}px` as any,
                   }}
                 />
               ))}

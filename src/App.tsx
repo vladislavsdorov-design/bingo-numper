@@ -9,7 +9,7 @@
 //   WifiOff,
 // } from "lucide-react";
 // import { initializeApp } from "firebase/app";
-// import { getDatabase, ref, onValue, set } from "firebase/database";
+// import { getDatabase, ref, onValue, set, Database } from "firebase/database";
 
 // const firebaseConfig = {
 //   apiKey: "AIzaSyBghDQYhpnLcXzzKsG8MtKHEre_wUaIYJM",
@@ -23,7 +23,7 @@
 //   measurementId: "G-XBH8CV4L5Y",
 // };
 
-// let db = null;
+// let db: Database | null = null;
 // try {
 //   const app = initializeApp(firebaseConfig);
 //   db = getDatabase(app);
@@ -41,7 +41,24 @@
 //   "#3e6e8e",
 // ];
 
-// function makeConfetti(count) {
+// interface ConfettiPiece {
+//   id: number;
+//   kind: string;
+//   left: number;
+//   size: number;
+//   color: string;
+//   duration: number;
+//   delay: number;
+//   rotate: number;
+//   sway: number;
+// }
+
+// interface DisplayNumber {
+//   number: number;
+//   color: string;
+// }
+
+// function makeConfetti(count: number): ConfettiPiece[] {
 //   return Array.from({ length: count }, (_, i) => ({
 //     id: i,
 //     kind: Math.random() > 0.65 ? "streamer" : "square",
@@ -70,17 +87,18 @@
 // ];
 
 // export default function BingoCaller() {
-//   const [called, setCalled] = useState([]);
-//   const [celebrating, setCelebrating] = useState(false);
-//   const [view, setView] = useState("admin");
-//   const [pulseKey, setPulseKey] = useState(0);
-//   const [confetti, setConfetti] = useState([]);
-//   const [offline, setOffline] = useState(!db);
-//   const [displayNumbers, setDisplayNumbers] = useState([]);
-//   const [isTransitioning, setIsTransitioning] = useState(false);
+//   const [called, setCalled] = useState<number[]>([]);
+//   const [celebrating, setCelebrating] = useState<boolean>(false);
+//   const [view, setView] = useState<"admin" | "display">("admin");
+//   const [pulseKey, setPulseKey] = useState<number>(0);
+//   const [confetti, setConfetti] = useState<ConfettiPiece[]>([]);
+//   const [offline, setOffline] = useState<boolean>(!db);
+//   const [displayNumbers, setDisplayNumbers] = useState<DisplayNumber[]>([]);
+//   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
 
-//   const lastRef = useRef(undefined);
-//   const prevCelebratingRef = useRef(false);
+//   const lastRef = useRef<number | undefined>(undefined);
+//   const prevCelebratingRef = useRef<boolean>(false);
+//   const rootRef = useRef<HTMLDivElement | null>(null);
 
 //   const calledSet = new Set(called);
 //   const last = called[called.length - 1];
@@ -89,31 +107,59 @@
 //   const numbers = Array.from({ length: MAX_NUMBER }, (_, i) => i + 1);
 
 //   // Разбиваем номера на строки по 10
-//   const numberRows = [];
+//   const numberRows: number[][] = [];
 //   for (let i = 0; i < numbers.length; i += 10) {
 //     numberRows.push(numbers.slice(i, i + 10));
 //   }
 
+//   function enterFullscreen() {
+//     const el = rootRef.current;
+//     if (el && el.requestFullscreen) {
+//       el.requestFullscreen().catch(() => {});
+//     }
+//   }
+
+//   function exitFullscreen() {
+//     if (document.fullscreenElement) {
+//       document.exitFullscreen().catch(() => {});
+//     }
+//   }
+
+//   // Если пользователь выходит из полноэкранного режима (например, через Esc),
+//   // возвращаем его на панель прowadzącego
+//   useEffect(() => {
+//     function handleFsChange() {
+//       if (!document.fullscreenElement && view === "display") {
+//         setView("admin");
+//       }
+//     }
+//     document.addEventListener("fullscreenchange", handleFsChange);
+//     return () =>
+//       document.removeEventListener("fullscreenchange", handleFsChange);
+//   }, [view]);
+
 //   // subscribe to Firebase (falls back to local-only state if unavailable)
 //   useEffect(() => {
 //     if (!db) return;
-//     let unsub;
+//     let unsub: (() => void) | undefined;
 //     try {
 //       const gameRef = ref(db, "bingoGame");
 //       unsub = onValue(
 //         gameRef,
 //         (snap) => {
 //           const data = snap.val() || {};
-//           const newCalled = data.called || [];
+//           const newCalled: number[] = data.called || [];
 //           setCalled(newCalled);
 //           setCelebrating(!!data.celebrating);
 //           setOffline(false);
 
 //           // Восстанавливаем цвета для отображения
-//           const newDisplayNumbers = newCalled.map((num, index) => ({
-//             number: num,
-//             color: BALL_COLORS[index % BALL_COLORS.length],
-//           }));
+//           const newDisplayNumbers: DisplayNumber[] = newCalled.map(
+//             (num, index) => ({
+//               number: num,
+//               color: BALL_COLORS[index % BALL_COLORS.length],
+//             })
+//           );
 //           setDisplayNumbers(newDisplayNumbers);
 //         },
 //         () => setOffline(true)
@@ -151,7 +197,7 @@
 //     prevCelebratingRef.current = celebrating;
 //   }, [celebrating]);
 
-//   function persist(newCalled, newCelebrating) {
+//   function persist(newCalled: number[], newCelebrating: boolean) {
 //     if (db && !offline) {
 //       set(ref(db, "bingoGame"), {
 //         called: newCalled,
@@ -163,7 +209,7 @@
 //     }
 //   }
 
-//   function callNumber(n) {
+//   function callNumber(n: number) {
 //     if (calledSet.has(n)) return;
 //     persist([...called, n], celebrating);
 //   }
@@ -207,7 +253,7 @@
 //   }
 
 //   return (
-//     <div className="bc-root">
+//     <div className="bc-root" ref={rootRef}>
 //       <style>{`
 //         @import url('https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600;700&display=swap');
 
@@ -429,14 +475,14 @@
 //           overflow: hidden;
 //         }
 //         .display-back {
-//           position: absolute;
+//         position: absolute;
 //           top: 14px;
 //           left: 14px;
 //           opacity: -10.50;
 //           z-index: 5;
 //               color: #00000000;
 //         }
-//         // .display-back:hover { opacity: 1; }
+//         .display-back:hover { opacity: 1; }
 
 //         .display-history {
 //           display: flex;
@@ -448,14 +494,14 @@
 //           margin: 0 auto;
 //         }
 //         .d-chip {
-//           width: clamp(28px, 4vw, 40px);
-//           height: clamp(28px, 4vw, 40px);
+//          width: clamp(28px, 6vw, 100px);
+//     height: clamp(28px, 6vw, 100px);
 //           border-radius: 50%;
 //           display: flex;
 //           align-items: center;
 //           justify-content: center;
 //           font-weight: 700;
-//           font-size: clamp(11px, 1.6vw, 16px);
+//          font-size: clamp(11px, 2.6vw, 40px);
 //           color: var(--ink);
 //           box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 //           animation: appearNumber 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both, floatBall 3s ease-in-out infinite 0.6s;
@@ -741,7 +787,13 @@
 //             <h1 className="admin-title">
 //               BINGO <span>CALLER</span>
 //             </h1>
-//             <button className="btn" onClick={() => setView("display")}>
+//             <button
+//               className="btn"
+//               onClick={() => {
+//                 setView("display");
+//                 enterFullscreen();
+//               }}
+//             >
 //               <Monitor size={16} /> Ekran
 //             </button>
 //           </div>
@@ -802,19 +854,20 @@
 //                 Wylosowane numery pojawią się tutaj.
 //               </div>
 //             ) : (
-//               called.map((n) => (
-//                 <div
-//                   key={n}
-//                   className={`h-chip ${n === last ? "current-h" : ""}`}
-//                   style={{
-//                     background:
-//                       displayNumbers.find((d) => d.number === n)?.color ||
-//                       "var(--gold)",
-//                   }}
-//                 >
-//                   {n}
-//                 </div>
-//               ))
+//               called.map((n) => {
+//                 const displayNum = displayNumbers.find((d) => d.number === n);
+//                 return (
+//                   <div
+//                     key={n}
+//                     className={`h-chip ${n === last ? "current-h" : ""}`}
+//                     style={{
+//                       background: displayNum?.color || "var(--gold)",
+//                     }}
+//                   >
+//                     {n}
+//                   </div>
+//                 );
+//               })
 //             )}
 //           </div>
 
@@ -824,6 +877,7 @@
 //                 {row.map((n) => {
 //                   const isCalled = calledSet.has(n);
 //                   const isCurrent = n === last;
+//                   const displayNum = displayNumbers.find((d) => d.number === n);
 //                   return (
 //                     <button
 //                       key={n}
@@ -834,8 +888,7 @@
 //                       disabled={isCalled}
 //                       style={{
 //                         background: isCalled
-//                           ? displayNumbers.find((d) => d.number === n)?.color ||
-//                             "var(--gold)"
+//                           ? displayNum?.color || "var(--gold)"
 //                           : "transparent",
 //                       }}
 //                     >
@@ -849,7 +902,13 @@
 //         </div>
 //       ) : (
 //         <div className="display-root">
-//           <button className="btn display-back" onClick={() => setView("admin")}>
+//           <button
+//             className="btn display-back"
+//             onClick={() => {
+//               exitFullscreen();
+//               setView("admin");
+//             }}
+//           >
 //             <ArrowLeft size={15} /> Panel prowadzącego
 //           </button>
 
@@ -921,7 +980,6 @@
 //                     animationDuration: `${p.duration}s`,
 //                     animationDelay: `${p.delay}s`,
 //                     transform: `rotate(${p.rotate}deg)`,
-//                     "--sway": `${p.sway}px`,
 //                   }}
 //                 />
 //               ))}
@@ -933,7 +991,6 @@
 //     </div>
 //   );
 // }
-/** @jsxRuntime classic */
 import React, { useState, useEffect, useRef } from "react";
 import {
   RotateCcw,
@@ -967,7 +1024,8 @@ try {
   db = null;
 }
 
-const MAX_NUMBER = 69;
+const MAX_NUMBER = 75;
+const GRID_COLUMNS = 10;
 const CONFETTI_COLORS = [
   "#d4a73c",
   "#b4483a",
@@ -1031,10 +1089,10 @@ export default function BingoCaller() {
   const [offline, setOffline] = useState<boolean>(!db);
   const [displayNumbers, setDisplayNumbers] = useState<DisplayNumber[]>([]);
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
-  const [showBingoResult, setShowBingoResult] = useState<boolean>(false);
 
   const lastRef = useRef<number | undefined>(undefined);
   const prevCelebratingRef = useRef<boolean>(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
 
   const calledSet = new Set(called);
   const last = called[called.length - 1];
@@ -1042,11 +1100,37 @@ export default function BingoCaller() {
   // Массив чисел от 1 до MAX_NUMBER
   const numbers = Array.from({ length: MAX_NUMBER }, (_, i) => i + 1);
 
-  // Разбиваем номера на строки по 10
+  // Разбиваем номера на строки по GRID_COLUMNS (10) для сетки в админке
   const numberRows: number[][] = [];
-  for (let i = 0; i < numbers.length; i += 10) {
-    numberRows.push(numbers.slice(i, i + 10));
+  for (let i = 0; i < numbers.length; i += GRID_COLUMNS) {
+    numberRows.push(numbers.slice(i, i + GRID_COLUMNS));
   }
+
+  function enterFullscreen() {
+    const el = rootRef.current;
+    if (el && el.requestFullscreen) {
+      el.requestFullscreen().catch(() => {});
+    }
+  }
+
+  function exitFullscreen() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+  }
+
+  // Если пользователь выходит из полноэкранного режима (например, через Esc),
+  // возвращаем его на панель ведущего
+  useEffect(() => {
+    function handleFsChange() {
+      if (!document.fullscreenElement && view === "display") {
+        setView("admin");
+      }
+    }
+    document.addEventListener("fullscreenchange", handleFsChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFsChange);
+  }, [view]);
 
   // subscribe to Firebase (falls back to local-only state if unavailable)
   useEffect(() => {
@@ -1071,12 +1155,6 @@ export default function BingoCaller() {
             })
           );
           setDisplayNumbers(newDisplayNumbers);
-
-          // Если celebrating закончился, показываем результат
-          if (!data.celebrating && prevCelebratingRef.current) {
-            setShowBingoResult(true);
-            setTimeout(() => setShowBingoResult(false), 3000);
-          }
         },
         () => setOffline(true)
       );
@@ -1166,13 +1244,10 @@ export default function BingoCaller() {
 
   function stopCelebration() {
     persist(called, false);
-    // Показываем результат BINGO
-    setShowBingoResult(true);
-    setTimeout(() => setShowBingoResult(false), 3000);
   }
 
   return (
-    <div className="bc-root">
+    <div className="bc-root" ref={rootRef}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600;700&display=swap');
 
@@ -1343,7 +1418,7 @@ export default function BingoCaller() {
         }
         .number-row {
           display: grid;
-          grid-template-columns: repeat(10, 1fr);
+          grid-template-columns: repeat(${GRID_COLUMNS}, 1fr);
           gap: 6px;
         }
         .chip {
@@ -1413,14 +1488,14 @@ export default function BingoCaller() {
           margin: 0 auto;
         }
         .d-chip {
-          width: clamp(28px, 4vw, 40px);
-          height: clamp(28px, 4vw, 40px);
+         width: clamp(28px, 6vw, 100px);
+    height: clamp(28px, 6vw, 100px);
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           font-weight: 700;
-          font-size: clamp(11px, 1.6vw, 16px);
+         font-size: clamp(11px, 2.6vw, 40px);
           color: var(--ink);
           box-shadow: 0 4px 12px rgba(0,0,0,0.3);
           animation: appearNumber 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both, floatBall 3s ease-in-out infinite 0.6s;
@@ -1601,60 +1676,6 @@ export default function BingoCaller() {
           padding: 20px;
         }
 
-        /* Bingo Result Animation */
-        .bingo-result {
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          font-family: 'Anton', sans-serif;
-          font-size: clamp(80px, 20vw, 200px);
-          color: var(--gold);
-          text-shadow: 
-            0 0 40px rgba(212,167,60,0.6),
-            0 0 80px rgba(212,167,60,0.3),
-            0 0 120px rgba(212,167,60,0.2);
-          z-index: 25;
-          pointer-events: none;
-          animation: resultPop 3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-          text-align: center;
-          line-height: 1;
-        }
-        .bingo-result .result-number {
-          font-size: clamp(60px, 15vw, 150px);
-          display: block;
-          margin-bottom: 10px;
-        }
-        .bingo-result .result-label {
-          font-size: clamp(20px, 4vw, 40px);
-          color: var(--cream);
-          text-shadow: 0 0 20px rgba(255,255,255,0.3);
-          display: block;
-          letter-spacing: 0.15em;
-        }
-        @keyframes resultPop {
-          0% { 
-            transform: translate(-50%, -50%) scale(0.1) rotate(-20deg);
-            opacity: 0;
-          }
-          15% {
-            transform: translate(-50%, -50%) scale(1.5) rotate(5deg);
-            opacity: 1;
-          }
-          30% {
-            transform: translate(-50%, -50%) scale(1.1) rotate(-3deg);
-            opacity: 1;
-          }
-          50% {
-            transform: translate(-50%, -50%) scale(1) rotate(0deg);
-            opacity: 1;
-          }
-          100% { 
-            transform: translate(-50%, -50%) scale(1.2) rotate(0deg);
-            opacity: 0;
-          }
-        }
-
         /* ---------- EPIC CELEBRATION ---------- */
         .celebrate-overlay {
           position: fixed;
@@ -1747,7 +1768,7 @@ export default function BingoCaller() {
         .celebrate-close:hover { background: rgba(242,233,208,0.3); }
 
         @media (prefers-reduced-motion: reduce) {
-          .ball-appear, .ball-transition-in, .bingo-result,
+          .ball-appear, .ball-transition-in,
           .confetti-piece, .bingo-text, .celebrate-rays, .celebrate-flash,
           .d-chip, .ball-float, .ball-glow, .chip-current, .h-chip.current-h,
           .h-chip { animation: none; }
@@ -1760,7 +1781,13 @@ export default function BingoCaller() {
             <h1 className="admin-title">
               BINGO <span>CALLER</span>
             </h1>
-            <button className="btn" onClick={() => setView("display")}>
+            <button
+              className="btn"
+              onClick={() => {
+                setView("display");
+                enterFullscreen();
+              }}
+            >
               <Monitor size={16} /> Ekran
             </button>
           </div>
@@ -1869,7 +1896,13 @@ export default function BingoCaller() {
         </div>
       ) : (
         <div className="display-root">
-          <button className="btn display-back" onClick={() => setView("admin")}>
+          <button
+            className="btn display-back"
+            onClick={() => {
+              exitFullscreen();
+              setView("admin");
+            }}
+          >
             <ArrowLeft size={15} /> Panel prowadzącego
           </button>
 
@@ -1919,14 +1952,6 @@ export default function BingoCaller() {
               </div>
             )}
           </div>
-
-          {/* Результат BINGO */}
-          {showBingoResult && last && (
-            <div className="bingo-result">
-              <span className="result-number">{last}</span>
-              <span className="result-label">🎉 BINGO! 🎉</span>
-            </div>
-          )}
 
           {celebrating && (
             <div className="celebrate-overlay">

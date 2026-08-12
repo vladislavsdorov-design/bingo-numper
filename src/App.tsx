@@ -1727,7 +1727,7 @@ export default function BingoCaller() {
         .bingo-text {
           position: relative;
           font-family: 'Anton', sans-serif;
-          font-size: clamp(72px, 20vw, 220px);
+          font-size: clamp(140px, 34vw, 420px);
           letter-spacing: 0.06em;
           color: var(--gold);
           text-shadow: 0 0 30px rgba(212,167,60,0.7), 0 6px 0 rgba(8,17,9,0.6);

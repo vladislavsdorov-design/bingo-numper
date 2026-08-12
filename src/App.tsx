@@ -412,22 +412,25 @@
 //         .number-grid-wrapper {
 //           display: flex;
 //           flex-direction: row;
+//           flex-wrap: wrap;
+//           justify-content: center;
 //           gap: 6px;
 //         }
 //         .number-column {
-//           flex: 1;
-//           display: grid;
-//           grid-template-rows: repeat(${GRID_COLUMNS}, 1fr);
-//           gap: 6px;
+//        width: clamp(34px, 12vw, 51px);
+//     display: grid;
+//     grid-template-rows: repeat(10, 1fr);
+//     gap: 6px;
 //         }
 //         .chip {
+//           width: 100%;
 //           aspect-ratio: 1;
 //           border-radius: 50%;
 //           border: 1.5px solid rgba(242,233,208,0.25);
 //           background: transparent;
 //           color: var(--cream-dim);
 //           font-weight: 700;
-//           font-size: 14px;
+//           font-size: clamp(10px, 2.6vw, 13px);
 //           cursor: pointer;
 //           transition: all 0.3s ease;
 //         }
@@ -1469,21 +1472,21 @@ export default function BingoCaller() {
         .display-history {
           display: flex;
           flex-wrap: wrap;
-          gap: 8px;
+          gap: 10px;
           padding: 60px 4vw 10px;
           justify-content: center;
-          max-width: 80vw;
+          max-width: 92vw;
           margin: 0 auto;
         }
         .d-chip {
-         width: clamp(28px, 6vw, 100px);
-    height: clamp(28px, 6vw, 100px);
+         width: clamp(38px, 8.5vw, 140px);
+    height: clamp(38px, 8.5vw, 140px);
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           font-weight: 700;
-         font-size: clamp(11px, 2.6vw, 40px);
+         font-size: clamp(15px, 3.6vw, 56px);
           color: var(--ink);
           box-shadow: 0 4px 12px rgba(0,0,0,0.3);
           animation: appearNumber 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both, floatBall 3s ease-in-out infinite 0.6s;
@@ -1724,7 +1727,7 @@ export default function BingoCaller() {
         .bingo-text {
           position: relative;
           font-family: 'Anton', sans-serif;
-          font-size: clamp(52px, 15vw, 160px);
+          font-size: clamp(72px, 20vw, 220px);
           letter-spacing: 0.06em;
           color: var(--gold);
           text-shadow: 0 0 30px rgba(212,167,60,0.7), 0 6px 0 rgba(8,17,9,0.6);
